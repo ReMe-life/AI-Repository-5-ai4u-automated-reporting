@@ -1,4 +1,4 @@
-# AI-Repository-5-ai4u-automated-reporting
+# AI-Repository-5-Lumi-automated-reporting
 
 Work packet #5 Automated Reporting
 
