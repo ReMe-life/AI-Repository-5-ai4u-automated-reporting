@@ -1,193 +1,139 @@
-# AI-Repository-5-Lumi-automated-reporting
+# luki-modules-reporting  
+*Automated wellbeing reports, trend analysis & NLG for ReMeLife*
 
-Work packet #5 Automated Reporting
+---
 
-This repository focuses on developing an advanced AI-driven automated reporting system that leverages Electronic Life Records (ELR) and AI-generated data from the Lumi project. The system creates comprehensive, tailored reports for various stakeholders in the elderly care ecosystem, enhancing person-centred care delivery and management.
+## 1. Overview  
+This module generates **clear, human-readable reports** from ELR® data, activity logs, and engagement metrics. It turns raw signals into **actionable summaries** for families, carers, and clinicians—automatically and on schedule.
 
-Key Objectives:
-1.	Customisable Reporting: Develop AI algorithms that generate tailored reports based on user requirements, allowing caregivers to easily track progress and adjust care plans.7
+---
 
-2.	Wellbeing Data Analysis: Implement machine learning techniques to analyse ELR and Lumi-derived personal data, providing vital insights into the wellbeing of care recipients. 4
+## 2. Core Capabilities  
+- **Natural Language Generation (NLG):** Convert structured metrics into caregiver-friendly narratives.  
+- **Wellbeing Trend Analysis:** Detect changes in mood, engagement, cognition across time windows.  
+- **Visual Summaries (optional):** Produce charts/plots (PNG/SVG) for dashboards or PDFs.  
+- **Template System:** Reusable report templates per audience (family vs clinician).  
+- **APIs & Agent Tools:** Expose “generate_report”, “get_trends” for the LUKi agent or external services.
 
-3.	Stakeholder-Specific Outputs: Create distinct report templates for internal care teams, families, local authorities, regulators (such as the Care Quality Commission), and hospitals. 3 6
+---
 
-4.	Compliance Monitoring: Integrate AI-driven checks to ensure all generated reports comply with relevant regulations and standards. 9
+## 3. Tech Stack  
+- **NLG & Summarisation:**  
+  - Lightweight templates (Jinja2) + rule-based sentence assembly  
+  - Optional LLM-assisted summarisation via internal agent (not in this repo)  
+- **Analytics & Time Series:** pandas, statsmodels/prophet (optional)  
+- **Data Viz:** matplotlib / plotly (static export)  
+- **Schema & Validation:** pydantic  
+- **Orchestration:** LangChain tools to let LUKi trigger reports
 
-5.	Trend Identification: Utilise predictive analytics to identify patterns and trends in wellbeing data, enabling proactive adjustments to care strategies. 5
+---
 
-6.	Secure Data Handling: Implement robust data protection measures to ensure the privacy and security of sensitive personal information. 4
+## 4. Repository Structure  
+~~~text
+luki_modules_reporting/
+├── __init__.py
+├── config.py
+├── data/
+│   ├── schemas.py             # pydantic models: ActivityLog, MoodEntry, etc.
+│   └── loaders.py             # adapters to pull metrics from stores/APIs
+├── analytics/
+│   ├── aggregate.py           # rollups, stats
+│   ├── trends.py              # time-series analysis
+│   └── viz.py                 # chart generators (png/svg)
+├── nlg/
+│   ├── templates/
+│   │   ├── family.j2
+│   │   └── clinician.j2
+│   ├── builder.py             # assemble narrative from stats + templates
+│   └── summariser.py          # optional LLM summarisation hook
+├── interfaces/
+│   ├── agent_tools.py         # LangChain @tool wrappers
+│   └── api.py                 # FastAPI endpoints (optional)
+└── tests/
+~~~
 
-7.	Interoperability: Develop APIs for seamless integration with existing care management systems and potential transfer of relevant data to hospitals during patient transitions. 7
+---
 
-This AI-driven automated reporting system will significantly enhance the efficiency and effectiveness of person-centered care delivery. By providing tailored, comprehensive reports based on ELR and Lumi data, it will support informed decision-making, improve communication among stakeholders, and ultimately contribute to better outcomes for elderly care recipients.
- 
-Key AI technologies and processes for this package include:
-8.	Natural Language Generation (NLG): To convert structured data into human-readable narrative reports.
-9.	Data Visualisation AI: To create dynamic, interactive charts and graphs that effectively communicate trends and insights.
-10.	Machine Learning Algorithms: To identify patterns and correlations in ELR and Lumi data, providing deeper insights into wellbeing trends.
-11.	Predictive Analytics: To forecast potential changes in wellbeing based on historical data and current trends.
-12.	Sentiment Analysis: To gauge emotional wellbeing from textual data collected during activities and interactions.
-13.	Automated Data Aggregation: To collect and synthesise data from various sources within the Lumi ecosystem.
-14.	Personalisation Algorithms: To tailor report content and format based on the specific needs of different stakeholders.
-Integration process:
-15.	Data Integration Hub: Develop a central system to collect and process data from ELR and all Lumi components.
-16.	Report Template Engine: Create customisable report templates for different stakeholders (care teams, families, authorities, hospitals).
-17.	User Preference System: Implement a mechanism for users to define their reporting requirements and preferences.
-18.	Automated Scheduling: Set up a system to generate reports at predefined intervals or trigger events.
-19.	Secure Distribution Channel: Develop a secure method to distribute reports to authorised recipients, ensuring data privacy and compliance with regulations.
-20.	Feedback Loop: Incorporate a system for users to provide feedback on reports, allowing for continuous improvement of the reporting process.
-21.	Regulatory Compliance Check: Implement an AI-driven system to ensure all generated reports comply with relevant regulations and standards.
-This AI-driven automated reporting system will significantly enhance the ability to communicate valuable wellbeing information to all stakeholders involved in elderly care. By providing tailored, comprehensive reports based on ELR and Lumi data, it will support person-centered care delivery, improve family communication, and facilitate smoother transitions between care settings 9 11
- Analysing the requirements, suggesting appropriate AI technologies and libraries, and providing a sample Python code structure for Work Packet #5: Automated Reporting.
-1.	Analysis of requirements:
-•	Customisable reporting
-•	Wellbeing data analysis
-•	Stakeholder-specific outputs
-•	Compliance monitoring
-•	Trend identification
-•	Secure data handling
-•	Interoperability
-2.	Suggested AI technologies and libraries:
-•	Natural Language Generation: GPT-3 or NLTK
-•	Data Visualisation: Matplotlib or Plotly
-•	Machine Learning: scikit-learn
-•	Predictive Analytics: Prophet or statsmodels
-•	Sentiment Analysis: TextBlob or VADER
-•	Data Aggregation: pandas
-•	API Development: Flask or FastAPI
+## 5. Quick Start  
+~~~bash
+git clone git@github.com:REMELife/luki-modules-reporting.git
+cd luki-modules-reporting
+python -m venv venv && source venv/bin/activate
+pip install -r requirements.txt
+~~~
 
-3.	Explanation and areas for further development:
-This following code provides a basic structure for the Automated Reporting System. It includes methods for generating customised reports, analysing wellbeing data, creating stakeholder-specific reports, checking compliance, identifying trends, and analysing sentiment. It also includes a simple API for report generation.Areas for further development:
-•	Implement more sophisticated NLG techniques for report generation
-•	Enhance data visualisation capabilities with interactive charts
-•	Develop more comprehensive compliance checking mechanisms
-•	Implement advanced security measures for data handling
-•	Expand the API to cover all reporting functionalities
-•	Integrate with existing care management systems
-•	Implement user preference management for report customisation
-•	Develop a feedback system for continuous improvement of reports
-This code serves as a starting point and would need to be expanded and integrated with the ReMeLife ecosystem for full functionality. It demonstrates the potential for creating an AI-driven automated reporting system that can enhance communication and decision-making in elderly care.
+### Minimal example  
+~~~python
+from datetime import date, timedelta
+from luki_modules_reporting.data.loaders import load_demo_metrics
+from luki_modules_reporting.analytics.aggregate import aggregate_metrics
+from luki_modules_reporting.nlg.builder import build_report
 
-4.	Sample Python code structure:
+# 1. Load demo data (replace with real ELR/metrics adapters)
+metrics = load_demo_metrics(user_id="user_123",
+                            start=date.today()-timedelta(days=7),
+                            end=date.today())
 
- # Automated Reporting System
+# 2. Aggregate & analyse
+stats = aggregate_metrics(metrics)
 
-This repository contains a sample implementation of an Automated Reporting System. The code demonstrates various functionalities including loading data, generating customised reports, analysing wellbeing data, creating stakeholder-specific reports, checking compliance, identifying trends, analysing sentiment, and running an API.
+# 3. Build narrative
+report_text = build_report(stats, audience="family")  # or "clinician"
+print(report_text)
+~~~
 
-## Sample Code
+### Generate chart & embed in report  
+~~~python
+from luki_modules_reporting.analytics.viz import activity_chart
+fig_path = activity_chart(metrics, out_path="outputs/activity.png")
 
-```python
-import pandas as pd
-import matplotlib.pyplot as plt
-from sklearn.ensemble import RandomForestRegressor
-from prophet import Prophet
-from textblob import TextBlob
-import openai
-from flask import Flask, request, jsonify
+# pass fig_path to the template context inside build_report(...)
+~~~
 
-class AutomatedReportingSystem:
-    def __init__(self):
-        self.data = pd.DataFrame()  # Placeholder for ELR and Lumi data
-        self.ml_model = RandomForestRegressor()
-        self.nlg_model = openai.Completion()
-        self.app = Flask(__name__)
+### Expose as LangChain tool  
+~~~python
+# interfaces/agent_tools.py
+from langchain.tools import tool
+from .nlg.builder import build_report
+from .data.loaders import fetch_metrics_window
+from .analytics.aggregate import aggregate_metrics
 
-    def load_data(self, data_source):
-        # Load data from ELR and Lumi components
-        self.data = pd.read_csv(data_source)
+@tool("generate_wellbeing_report", return_direct=True)
+def generate_wellbeing_report(user_id: str, days: int = 7) -> str:
+    """Return a text wellbeing report for the last N days."""
+    metrics = fetch_metrics_window(user_id=user_id, days=days)
+    stats = aggregate_metrics(metrics)
+    return build_report(stats, audience="family")
+~~~
 
-    def generate_customised_report(self, user_requirements):
-        report_content = self.nlg_model.create(
-            engine="text-davinci-002",
-            prompt=f"Generate a report based on the following requirements: {user_requirements}",
-            max_tokens=500
-        )
-        return report_content.choices[0].text
+---
 
-    def analyse_wellbeing_data(self):
-        # Implement machine learning analysis
-        features = ['activity_level', 'sleep_quality', 'social_interactions']
-        target = 'wellbeing_score'
-        X = self.data[features]
-        y = self.data[target]
-        self.ml_model.fit(X, y)
-        insights = self.ml_model.feature_importances_
-        return dict(sip(features, insights))
+## 6. Privacy & Compliance  
+- Do **not** log raw ELR text in this repo; only derived stats.  
+- Encrypt any temporary files (figures, PDFs) at rest.  
+- Respect consent flags—exclude hidden/sensitive categories from outputs.  
+- Keep PHI out of public issues; use synthetic examples.
 
-    def create_stakeholder_report(self, stakeholder_type):
-        if stakeholder_type == 'family':
-            return self.generate_family_report()
-        elif stakeholder_type == 'care_team':
-            return self.generate_care_team_report()
-        # Add more stakeholder-specific report generation methods
+---
 
-    def check_compliance(self, report):
-        # Implement compliance checking logic
-        compliance_score = 0.95  # Placeholder
-        return compliance_score > 0.9
+## 7. Roadmap  
+- PDF export service (WeasyPrint / ReportLab)  
+- Multi-language report templates (i18n)  
+- Clinician-specific metrics (MMSE scores, med adherence)  
+- Alerting: threshold-based notifications (e.g., sudden drop in engagement)  
+- Differential privacy for aggregated reports across cohorts
 
-    def identify_trends(self):
-        df = self.data[['ds', 'wellbeing_score']]
-        model = Prophet()
-        model.fit(df)
-        future = model.make_future_dataframe(periods=30)
-        forecast = model.predict(future)
-        return forecast[['ds', 'yhat', 'yhat_lower', 'yhat_upper']]
+---
 
-    def analyse_sentiment(self, text_data):
-        sentiment = TextBlob(text_data).sentiment.polarity
-        return sentiment
+## 8. Contributing  
+Open to PRs. Follow `CONTRIBUTING.md`, keep tests green, and document new templates.
 
-    @app.route('/generate_report', methods=['POST'])
-    def api_generate_report(self):
-        data = request.json
-        report = self.generate_customised_report(data['requirements'])
-        return jsonify({'report': report})
+---
 
-    def run_api(self):
-        self.app.run(debug=True)
+## 9. License  
+**Apache-2.0** © 2025 Singularities Ltd / ReMeLife.  
+(Add via GitHub “Choose a license template” or paste the standard Apache-2.0 text in `LICENSE`.)
 
-# Example usage
-ars = AutomatedReportingSystem()
-ars.load_data('elr_Lumi_data.csv')
+---
 
-# Generate customised report
-user_req = "Provide a summary of the patient's wellbeing over the past month"
-report = ars.generate_customised_report(user_req)
-print(report)
-
-# Analyse wellbeing data
-insights = ars.analyse_wellbeing_data()
-print("Wellbeing Insights:", insights)
-
-# Create stakeholder-specific report
-family_report = ars.create_stakeholder_report('family')
-print("Family Report:", family_report)
-
-# Check compliance
-is_compliant = ars.check_compliance(family_report)
-print("Report Compliance:", is_compliant)
-
-# Identify trends
-trends = ars.identify_trends()
-print("Wellbeing Trends:", trends.tail())
-
-# Analyse sentiment
-sentiment = ars.analyse_sentiment("The patient has shown significant improvement in mood and engagement.")
-print("Sentiment Score:", sentiment)
-
-# Run API
-ars.run_api()
-Explanation
-AutomatedReportingSystem Class: Manages data loading, report generation, wellbeing data analysis, stakeholder-specific report creation, compliance checking, trend identification, sentiment analysis, and API running.
-load_data: Loads data from specified sources.
-generate_customised_report: Generates a report based on user requirements using OpenAI's GPT-3.
-analyse_wellbeing_data: Analyses wellbeing data using a RandomForestRegressor.
-create_stakeholder_report: Creates reports tailored to different stakeholders.
-check_compliance: Checks the compliance of generated reports.
-identify_trends: Identifies trends in wellbeing data using Prophet.
-analyse_sentiment: Analyses the sentiment of text data using TextBlob.
-api_generate_report: API endpoint for generating reports.
-run_api: Runs the Flask API.  
-
-
+**Turn data into insight. Help carers act, not guess.**
