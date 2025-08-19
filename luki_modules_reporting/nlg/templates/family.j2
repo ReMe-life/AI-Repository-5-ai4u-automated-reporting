@@ -1,0 +1,117 @@
+# {{ user_name }}'s Weekly Wellbeing Report
+*Report Period: {{ start_date }} to {{ end_date }}*
+
+---
+
+## Summary
+{% if wellbeing_metrics.avg_daily_activities >= 3 %}
+{{ user_name }} has been maintaining excellent activity levels this week, participating in an average of {{ "%.1f"|format(wellbeing_metrics.avg_daily_activities) }} activities per day.
+{% elif wellbeing_metrics.avg_daily_activities >= 2 %}
+{{ user_name }} has been keeping reasonably active this week with {{ "%.1f"|format(wellbeing_metrics.avg_daily_activities) }} activities per day on average.
+{% else %}
+{{ user_name }}'s activity levels have been lower than usual this week, with {{ "%.1f"|format(wellbeing_metrics.avg_daily_activities) }} activities per day on average.
+{% endif %}
+
+{% if wellbeing_metrics.avg_engagement_score >= 0.7 %}
+The good news is that {{ user_name }} has been highly engaged in activities, showing genuine interest and participation.
+{% elif wellbeing_metrics.avg_engagement_score >= 0.5 %}
+{{ user_name }} has shown moderate engagement in activities throughout the week.
+{% else %}
+{{ user_name }}'s engagement in activities has been lower than usual, which may indicate a need for different types of activities or additional support.
+{% endif %}
+
+---
+
+## Activity Highlights
+
+### What {{ user_name }} Enjoyed Most
+{% if wellbeing_metrics.activity_breakdown %}
+This week, {{ user_name }} participated in:
+{% for activity_type, count in wellbeing_metrics.activity_breakdown.items() %}
+- **{{ activity_type|title }} activities**: {{ count }} times
+{% endfor %}
+{% endif %}
+
+{% if wellbeing_metrics.total_activity_minutes > 0 %}
+In total, {{ user_name }} spent {{ wellbeing_metrics.total_activity_minutes }} minutes engaged in meaningful activities.
+{% endif %}
+
+### Social Connections
+{% if wellbeing_metrics.total_social_interactions >= 5 %}
+{{ user_name }} had wonderful social connections this week with {{ wellbeing_metrics.total_social_interactions }} social interactions.
+{% elif wellbeing_metrics.total_social_interactions >= 2 %}
+{{ user_name }} enjoyed {{ wellbeing_metrics.total_social_interactions }} social interactions this week.
+{% else %}
+{{ user_name }} had limited social interactions this week ({{ wellbeing_metrics.total_social_interactions }}), which might be an area to focus on.
+{% endif %}
+
+{% if wellbeing_metrics.family_engagement_minutes > 0 %}
+Family time was particularly special, with {{ wellbeing_metrics.family_engagement_minutes }} minutes spent connecting with loved ones.
+{% endif %}
+
+---
+
+## Mood & Wellbeing
+
+{% if wellbeing_metrics.avg_mood_score %}
+{% if wellbeing_metrics.avg_mood_score >= 0.7 %}
+{{ user_name }}'s mood has been generally positive this week, which is wonderful to see.
+{% elif wellbeing_metrics.avg_mood_score >= 0.5 %}
+{{ user_name }}'s mood has been fairly stable this week.
+{% else %}
+{{ user_name }}'s mood has been lower than usual this week, and extra care and attention may be beneficial.
+{% endif %}
+{% endif %}
+
+{% if wellbeing_metrics.avg_energy_level %}
+Energy levels averaged {{ "%.1f"|format(wellbeing_metrics.avg_energy_level) }} out of 10.
+{% endif %}
+
+{% if wellbeing_metrics.avg_sleep_quality %}
+Sleep quality has been {{ "%.1f"|format(wellbeing_metrics.avg_sleep_quality) }} out of 10 on average.
+{% endif %}
+
+---
+
+## Trends & Progress
+
+{% if wellbeing_metrics.activity_trend == "increasing" %}
+📈 **Great news!** {{ user_name }}'s activity levels are increasing, showing positive momentum.
+{% elif wellbeing_metrics.activity_trend == "decreasing" %}
+📉 Activity levels have been declining slightly. This might be a good time to try some new activities or provide extra encouragement.
+{% else %}
+📊 Activity levels have remained stable this week.
+{% endif %}
+
+{% if wellbeing_metrics.engagement_trend == "improving" %}
+💪 {{ user_name }}'s engagement in activities is improving, which is fantastic progress.
+{% elif wellbeing_metrics.engagement_trend == "declining" %}
+🤔 Engagement levels have declined slightly. Consider trying different types of activities that might spark more interest.
+{% else %}
+🎯 Engagement levels have remained consistent.
+{% endif %}
+
+---
+
+## Key Insights
+{% for insight in wellbeing_metrics.key_insights %}
+- {{ insight }}
+{% endfor %}
+
+---
+
+## Suggestions for Next Week
+{% for recommendation in wellbeing_metrics.recommendations %}
+- {{ recommendation }}
+{% endfor %}
+
+---
+
+## Family Notes
+{% if chart_paths %}
+📊 **Visual summaries are available** showing {{ user_name }}'s activity patterns and mood trends.
+{% endif %}
+
+Remember, every small step counts, and {{ user_name }}'s wellbeing journey is unique. These insights help us understand what works best and how to provide the most supportive care.
+
+*This report was generated automatically from {{ user_name }}'s activity data and is designed to help family members stay connected with their loved one's daily experiences.*

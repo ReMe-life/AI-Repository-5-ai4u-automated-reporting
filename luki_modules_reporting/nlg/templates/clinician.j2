@@ -1,0 +1,175 @@
+# Clinical Wellbeing Report: {{ user_name }}
+**Patient ID**: {{ user_id }}  
+**Report Period**: {{ start_date }} to {{ end_date }}  
+**Generated**: {{ generated_at.strftime('%Y-%m-%d %H:%M') }}
+
+---
+
+## Executive Summary
+
+**Activity Level**: {{ wellbeing_metrics.total_activities }} activities over {{ (wellbeing_metrics.end_date - wellbeing_metrics.start_date).days + 1 }} days (avg: {{ "%.1f"|format(wellbeing_metrics.avg_daily_activities) }}/day)  
+**Engagement Score**: {{ "%.2f"|format(wellbeing_metrics.avg_engagement_score) }}/1.0  
+**Mood Stability**: {% if wellbeing_metrics.avg_mood_score %}{{ "%.2f"|format(wellbeing_metrics.avg_mood_score) }}/1.0{% else %}Insufficient data{% endif %}
+
+---
+
+## Clinical Metrics
+
+### Activity Analysis
+- **Total Activities**: {{ wellbeing_metrics.total_activities }}
+- **Total Duration**: {{ wellbeing_metrics.total_activity_minutes }} minutes
+- **Daily Average**: {{ "%.1f"|format(wellbeing_metrics.avg_daily_activity_minutes) }} minutes/day
+- **Engagement Score**: {{ "%.3f"|format(wellbeing_metrics.avg_engagement_score) }} (0-1 scale)
+
+#### Activity Distribution
+{% for activity_type, count in wellbeing_metrics.activity_breakdown.items() %}
+- **{{ activity_type|title }}**: {{ count }} activities ({{ "%.1f"|format((count / wellbeing_metrics.total_activities * 100) if wellbeing_metrics.total_activities > 0 else 0) }}%)
+{% endfor %}
+
+### Psychosocial Indicators
+- **Social Interactions**: {{ wellbeing_metrics.total_social_interactions }}
+- **Family Engagement**: {{ wellbeing_metrics.family_engagement_minutes }} minutes
+- **Daily Social Average**: {{ "%.1f"|format(wellbeing_metrics.avg_daily_social_time) }} minutes/day
+
+### Mood & Affect Assessment
+{% if wellbeing_metrics.avg_mood_score %}
+- **Average Mood Score**: {{ "%.3f"|format(wellbeing_metrics.avg_mood_score) }}/1.0
+- **Mood Entries**: {{ wellbeing_metrics.total_mood_entries }}
+{% endif %}
+
+{% if wellbeing_metrics.avg_energy_level %}
+- **Energy Level**: {{ "%.1f"|format(wellbeing_metrics.avg_energy_level) }}/10
+{% endif %}
+{% if wellbeing_metrics.avg_anxiety_level %}
+- **Anxiety Level**: {{ "%.1f"|format(wellbeing_metrics.avg_anxiety_level) }}/10
+{% endif %}
+{% if wellbeing_metrics.avg_pain_level %}
+- **Pain Level**: {{ "%.1f"|format(wellbeing_metrics.avg_pain_level) }}/10
+{% endif %}
+{% if wellbeing_metrics.avg_sleep_quality %}
+- **Sleep Quality**: {{ "%.1f"|format(wellbeing_metrics.avg_sleep_quality) }}/10
+{% endif %}
+
+---
+
+## Trend Analysis
+
+### Activity Trends
+{% if wellbeing_metrics.activity_trend == "increasing" %}
+**Status**: ✅ **IMPROVING** - Activity levels show upward trend
+- Recommendation: Continue current intervention strategies
+{% elif wellbeing_metrics.activity_trend == "decreasing" %}
+**Status**: ⚠️ **DECLINING** - Activity levels showing downward trend
+- Recommendation: Review care plan and consider intervention adjustments
+{% else %}
+**Status**: ➡️ **STABLE** - Activity levels maintained
+- Recommendation: Monitor for changes and maintain current approach
+{% endif %}
+
+### Engagement Trends
+{% if wellbeing_metrics.engagement_trend == "improving" %}
+**Status**: ✅ **IMPROVING** - Patient engagement increasing
+- Clinical Note: Positive response to current activity programming
+{% elif wellbeing_metrics.engagement_trend == "declining" %}
+**Status**: ⚠️ **DECLINING** - Engagement levels decreasing
+- Clinical Note: May indicate need for activity modification or additional support
+{% else %}
+**Status**: ➡️ **STABLE** - Engagement levels consistent
+{% endif %}
+
+### Mood Trends
+{% if wellbeing_metrics.mood_trend == "improving" %}
+**Status**: ✅ **IMPROVING** - Mood indicators trending positively
+{% elif wellbeing_metrics.mood_trend == "declining" %}
+**Status**: ⚠️ **DECLINING** - Mood indicators show concerning trend
+- **Action Required**: Consider mood assessment and potential interventions
+{% else %}
+**Status**: ➡️ **STABLE** - Mood indicators stable
+{% endif %}
+
+---
+
+## Clinical Insights
+
+### Risk Factors Identified
+{% for insight in wellbeing_metrics.key_insights %}
+{% if "concern" in insight.lower() or "low" in insight.lower() or "below" in insight.lower() %}
+⚠️ {{ insight }}
+{% endif %}
+{% endfor %}
+
+### Positive Indicators
+{% for insight in wellbeing_metrics.key_insights %}
+{% if "good" in insight.lower() or "high" in insight.lower() or "positive" in insight.lower() %}
+✅ {{ insight }}
+{% endif %}
+{% endfor %}
+
+### General Observations
+{% for insight in wellbeing_metrics.key_insights %}
+{% if "concern" not in insight.lower() and "low" not in insight.lower() and "below" not in insight.lower() and "good" not in insight.lower() and "high" not in insight.lower() and "positive" not in insight.lower() %}
+• {{ insight }}
+{% endif %}
+{% endfor %}
+
+---
+
+## Clinical Recommendations
+
+### Immediate Actions
+{% for recommendation in wellbeing_metrics.recommendations %}
+{% if "increase" in recommendation.lower() or "consider" in recommendation.lower() %}
+🔴 **Priority**: {{ recommendation }}
+{% endif %}
+{% endfor %}
+
+### Care Plan Adjustments
+{% for recommendation in wellbeing_metrics.recommendations %}
+{% if "try" in recommendation.lower() or "schedule" in recommendation.lower() %}
+🟡 **Consider**: {{ recommendation }}
+{% endif %}
+{% endfor %}
+
+### Monitoring Points
+{% for recommendation in wellbeing_metrics.recommendations %}
+{% if "include" in recommendation.lower() or "maintain" in recommendation.lower() %}
+🟢 **Maintain**: {{ recommendation }}
+{% endif %}
+{% endfor %}
+
+---
+
+## Data Quality & Limitations
+
+- **Reporting Period**: {{ (wellbeing_metrics.end_date - wellbeing_metrics.start_date).days + 1 }} days
+- **Activity Data Points**: {{ wellbeing_metrics.total_activities }}
+- **Mood Data Points**: {{ wellbeing_metrics.total_mood_entries }}
+- **Data Completeness**: {% if wellbeing_metrics.total_activities >= 14 %}Good{% elif wellbeing_metrics.total_activities >= 7 %}Moderate{% else %}Limited{% endif %}
+
+{% if wellbeing_metrics.total_activities < 7 %}
+⚠️ **Note**: Limited data points may affect trend analysis reliability. Consider extending monitoring period.
+{% endif %}
+
+---
+
+## Appendices
+
+{% if chart_paths %}
+### Visual Data Analysis
+{% for chart_name, chart_path in chart_paths.items() %}
+- **{{ chart_name|title }}**: {{ chart_path }}
+{% endfor %}
+{% endif %}
+
+### Methodology
+- Activity engagement scored on 0-1 scale based on completion rate and observed participation
+- Mood scores converted to 0-1 scale for statistical analysis
+- Trend analysis uses linear regression with p<0.05 significance threshold
+- Social interaction data includes both formal activities and informal engagement
+
+---
+
+*This report is generated from automated data collection and should be used in conjunction with clinical observation and assessment. For questions about methodology or data interpretation, consult the LUKi technical documentation.*
+
+**Report Generated by**: LUKi Reporting Module v{{ service_version }}  
+**Next Review**: {{ (wellbeing_metrics.end_date + timedelta(days=7)).strftime('%Y-%m-%d') }}
