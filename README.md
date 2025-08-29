@@ -3,6 +3,12 @@
 
 ---
 
+## License
+
+This project is licensed under the [Apache 2.0 License with ReMeLife custom clauses]
+
+---
+
 ## 1. Overview  
 This module generates **clear, human-readable reports** from ELR® data, activity logs, and engagement metrics. It turns raw signals into **actionable summaries** for families, carers, and clinicians—automatically and on schedule.
 
