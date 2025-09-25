@@ -25,7 +25,7 @@ class ReportingSettings(BaseSettings):
         description="URL for LUKi Memory Service"
     )
     api_gateway_url: str = Field(
-        default="http://localhost:8000",
+        default="http://localhost:8080",
         description="URL for LUKi API Gateway"
     )
     
