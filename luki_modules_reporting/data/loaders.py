@@ -10,25 +10,54 @@ from datetime import datetime, date, timedelta
 from typing import List, Optional, Dict, Any
 from uuid import uuid4
 import random
+import logging
 
 from ..config import settings
 from .schemas import (
-    ActivityLog, 
-    MoodEntry, 
-    EngagementMetric, 
+    ActivityLog,
+    MoodEntry,
+    EngagementMetric,
     WellbeingMetrics,
     ActivityType,
     MoodLevel,
-    EngagementLevel
+    EngagementLevel,
 )
+
+
+logger = logging.getLogger(__name__)
 
 
 class MetricsLoader:
     """Base class for loading metrics from various sources"""
     
-    def __init__(self, memory_service_url: Optional[str] = None):
+    def __init__(self, memory_service_url: Optional[str] = None, auth_token: Optional[str] = None):
         self.memory_service_url = memory_service_url or settings.memory_service_url
         self.client = httpx.AsyncClient(timeout=30.0)
+        self._service_token: Optional[str] = auth_token
+    
+    async def _ensure_service_token(self) -> None:
+        """Acquire a service token from the memory service if not already set.
+
+        This mirrors the /auth/service-token flow used by the core agent,
+        allowing the reporting service to call metrics endpoints in a
+        production-like way while remaining optional in local/dev setups.
+        """
+        if self._service_token is not None:
+            return
+
+        try:
+            response = await self.client.post(f"{self.memory_service_url}/auth/service-token")
+            response.raise_for_status()
+            data = response.json()
+            token = data.get("access_token")
+            if token:
+                self._service_token = token
+                logger.info("Obtained memory-service service token for reporting module")
+            else:
+                logger.warning("Service-token response from memory-service did not contain access_token")
+        except Exception as exc:
+            # Do not hard-fail: calls will proceed without Authorization header.
+            logger.warning("Failed to obtain service token from memory-service: %s", exc)
     
     async def close(self):
         """Close HTTP client"""
@@ -42,19 +71,25 @@ class MetricsLoader:
     ) -> List[ActivityLog]:
         """Fetch activity logs from memory service"""
         try:
+            await self._ensure_service_token()
+            headers: Dict[str, str] = {}
+            if self._service_token:
+                headers["Authorization"] = f"Bearer {self._service_token}"
+
             response = await self.client.get(
                 f"{self.memory_service_url}/v1/metrics/activities",
                 params={
                     "user_id": user_id,
                     "start_date": start_date.isoformat(),
-                    "end_date": end_date.isoformat()
-                }
+                    "end_date": end_date.isoformat(),
+                },
+                headers=headers,
             )
             response.raise_for_status()
             data = response.json()
             return [ActivityLog(**item) for item in data.get("activities", [])]
         except Exception as e:
-            print(f"Error fetching activity logs: {e}")
+            logger.error("Error fetching activity logs from memory-service: %s", e)
             return []
     
     async def fetch_mood_entries(
@@ -65,19 +100,25 @@ class MetricsLoader:
     ) -> List[MoodEntry]:
         """Fetch mood entries from memory service"""
         try:
+            await self._ensure_service_token()
+            headers: Dict[str, str] = {}
+            if self._service_token:
+                headers["Authorization"] = f"Bearer {self._service_token}"
+
             response = await self.client.get(
                 f"{self.memory_service_url}/v1/metrics/mood",
                 params={
                     "user_id": user_id,
                     "start_date": start_date.isoformat(),
-                    "end_date": end_date.isoformat()
-                }
+                    "end_date": end_date.isoformat(),
+                },
+                headers=headers,
             )
             response.raise_for_status()
             data = response.json()
             return [MoodEntry(**item) for item in data.get("mood_entries", [])]
         except Exception as e:
-            print(f"Error fetching mood entries: {e}")
+            logger.error("Error fetching mood entries from memory-service: %s", e)
             return []
     
     async def fetch_engagement_metrics(
@@ -88,19 +129,25 @@ class MetricsLoader:
     ) -> List[EngagementMetric]:
         """Fetch daily engagement metrics from memory service"""
         try:
+            await self._ensure_service_token()
+            headers: Dict[str, str] = {}
+            if self._service_token:
+                headers["Authorization"] = f"Bearer {self._service_token}"
+
             response = await self.client.get(
                 f"{self.memory_service_url}/v1/metrics/engagement",
                 params={
                     "user_id": user_id,
                     "start_date": start_date.isoformat(),
-                    "end_date": end_date.isoformat()
-                }
+                    "end_date": end_date.isoformat(),
+                },
+                headers=headers,
             )
             response.raise_for_status()
             data = response.json()
             return [EngagementMetric(**item) for item in data.get("metrics", [])]
         except Exception as e:
-            print(f"Error fetching engagement metrics: {e}")
+            logger.error("Error fetching engagement metrics from memory-service: %s", e)
             return []
 
 
@@ -257,7 +304,7 @@ async def fetch_metrics_window(
         
         # If no real data, fall back to demo data
         if not activity_logs and not mood_entries and not engagement_metrics:
-            print(f"No real data found for user {user_id}, using demo data")
+            logger.info("No real metrics data found for user %s, using demo data", user_id)
             return load_demo_metrics(user_id, start_date, end_date)
         
         return {
@@ -267,7 +314,7 @@ async def fetch_metrics_window(
         }
     
     except Exception as e:
-        print(f"Error fetching metrics, falling back to demo data: {e}")
+        logger.error("Error fetching metrics window for user %s, falling back to demo data: %s", user_id, e)
         return load_demo_metrics(user_id, start_date, end_date)
     
     finally:
