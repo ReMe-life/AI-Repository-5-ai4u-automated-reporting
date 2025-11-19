@@ -6,7 +6,10 @@ Provides wellbeing reports, analytics, and data visualization
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
+from typing import Any, Dict, Optional
 import logging
+
+import httpx
 import structlog
 
 from .config import settings
@@ -66,6 +69,72 @@ logger = structlog.get_logger()
 wellbeing_analyzer = None
 report_generator = None
 data_aggregator = None
+
+
+async def _enforce_analytics_policy(
+    user_id: str,
+    context: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
+    """Call security service policy/enforce for analytics scope.
+
+    Returns a dict with at least 'allowed' (bool) and optional error details.
+    When respect_consent_flags is False, this returns allowed=True without
+    making an external call.
+    """
+    if not settings.respect_consent_flags:
+        return {"allowed": True, "reason": "consent_checks_disabled"}
+
+    payload: Dict[str, Any] = {
+        "user_id": user_id,
+        "requester_role": "reporting_service",
+        "requested_scopes": ["analytics"],
+    }
+    if context:
+        payload["context"] = context
+
+    try:
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            response = await client.post(
+                f"{settings.security_service_url}/policy/enforce",
+                json=payload,
+            )
+
+        try:
+            raw = response.json()
+        except ValueError:
+            raw = {"detail": response.text}
+
+        data: Dict[str, Any]
+        if isinstance(raw, dict):
+            data = raw
+        else:
+            data = {"detail": raw}
+
+        if response.status_code == 200:
+            return {
+                "allowed": bool(data.get("allowed", True)),
+                "scopes_checked": data.get("scopes_checked", []),
+                "reason": data.get("reason", "consent_valid"),
+                "detail": data.get("detail"),
+            }
+
+        return {
+            "allowed": False,
+            "error": data.get("error", "policy_denied"),
+            "detail": data.get("detail"),
+            "status_code": response.status_code,
+        }
+    except Exception as exc:  # pragma: no cover - defensive guard
+        logger.error(
+            "Policy enforcement request failed",
+            user_id=user_id,
+            error=str(exc),
+        )
+        return {
+            "allowed": False,
+            "error": "policy_request_failed",
+            "detail": str(exc),
+        }
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -135,6 +204,24 @@ async def generate_wellbeing_report(user_id: str, days: int = None):
         raise HTTPException(status_code=400, detail=f"Maximum report days is {settings.max_report_days}")
     
     try:
+        policy = await _enforce_analytics_policy(
+            user_id=user_id,
+            context={"endpoint": "wellbeing_report", "days": report_days},
+        )
+        if not policy.get("allowed", True):
+            logger.info(
+                "Wellbeing report blocked by policy",
+                user_id=user_id,
+                policy_error=policy.get("error"),
+            )
+            raise HTTPException(
+                status_code=403,
+                detail={
+                    "error": policy.get("error", "consent_denied"),
+                    "policy": policy,
+                },
+            )
+
         report = await wellbeing_analyzer.generate_report(user_id, report_days)
         logger.info("Wellbeing report generated", user_id=user_id, days=report_days)
         return {"status": "success", "report": report}
@@ -149,6 +236,24 @@ async def get_trends(user_id: str):
         raise HTTPException(status_code=503, detail="Wellbeing analyzer not available")
     
     try:
+        policy = await _enforce_analytics_policy(
+            user_id=user_id,
+            context={"endpoint": "trends"},
+        )
+        if not policy.get("allowed", True):
+            logger.info(
+                "Trends request blocked by policy",
+                user_id=user_id,
+                policy_error=policy.get("error"),
+            )
+            raise HTTPException(
+                status_code=403,
+                detail={
+                    "error": policy.get("error", "consent_denied"),
+                    "policy": policy,
+                },
+            )
+
         trends = await wellbeing_analyzer.get_trends(user_id)
         return {"user_id": user_id, "trends": trends}
     except Exception as e:

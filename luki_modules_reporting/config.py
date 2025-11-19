@@ -28,6 +28,10 @@ class ReportingSettings(BaseSettings):
         default="http://localhost:8080",
         description="URL for LUKi API Gateway"
     )
+    security_service_url: str = Field(
+        default="http://localhost:8103",
+        description="URL for LUKi Security & Privacy Service"
+    )
     
     # Report Generation
     default_report_days: int = Field(
