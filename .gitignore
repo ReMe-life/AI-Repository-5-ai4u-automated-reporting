@@ -216,3 +216,7 @@ reports/output/
 logs/
 .cache/
 .ipynb_checkpoints/
+.DS_Store
+
+# Railway deployment (local-only)
+.railwayignore
