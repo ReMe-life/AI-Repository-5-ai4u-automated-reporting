@@ -3,11 +3,10 @@ LUKi Modules Reporting - FastAPI Application
 Provides wellbeing reports, analytics, and data visualization
 """
 
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from typing import Any, Dict, Optional
-import logging
 
 import httpx
 import structlog
@@ -149,10 +148,10 @@ async def lifespan(app: FastAPI):
         report_generator = ReportGenerator()
         data_aggregator = DataAggregator()
         
-        logger.info("✅ Reporting services initialized successfully")
-        
+        logger.info("Reporting services initialized successfully")
+
     except Exception as e:
-        logger.error("❌ Failed to initialize reporting services", error=str(e))
+        logger.error(f"Failed to initialize reporting services error={e}")
         # Continue startup even if some services fail
         
     yield
@@ -170,8 +169,7 @@ app = FastAPI(
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Configure appropriately for production
-    allow_credentials=True,
+    allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -194,7 +192,7 @@ async def health_check():
     return status
 
 @app.post("/reports/{user_id}/wellbeing")
-async def generate_wellbeing_report(user_id: str, days: int = None):
+async def generate_wellbeing_report(user_id: str, days: Optional[int] = None):
     """Generate wellbeing report for user"""
     if not wellbeing_analyzer:
         raise HTTPException(status_code=503, detail="Wellbeing analyzer not available")
@@ -225,8 +223,10 @@ async def generate_wellbeing_report(user_id: str, days: int = None):
         report = await wellbeing_analyzer.generate_report(user_id, report_days)
         logger.info("Wellbeing report generated", user_id=user_id, days=report_days)
         return {"status": "success", "report": report}
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.error("Failed to generate wellbeing report", user_id=user_id, error=str(e))
+        logger.error(f"Failed to generate wellbeing report user_id={user_id} error={e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/reports/{user_id}/trends")
@@ -256,8 +256,10 @@ async def get_trends(user_id: str):
 
         trends = await wellbeing_analyzer.get_trends(user_id)
         return {"user_id": user_id, "trends": trends}
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.error("Failed to get trends", user_id=user_id, error=str(e))
+        logger.error(f"Failed to get trends user_id={user_id} error={e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/reports/generate")
@@ -270,7 +272,7 @@ async def generate_text_report(report_data: dict):
         text_report = await report_generator.generate_text_report(report_data)
         return {"status": "success", "report": text_report}
     except Exception as e:
-        logger.error("Failed to generate text report", error=str(e))
+        logger.error(f"Failed to generate text report error={e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/reports/summarize")
@@ -283,11 +285,11 @@ async def summarize_data(data: dict):
         summary = await report_generator.generate_summary(data)
         return {"status": "success", "summary": summary}
     except Exception as e:
-        logger.error("Failed to generate summary", error=str(e))
+        logger.error(f"Failed to generate summary error={e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/data/{user_id}/aggregate")
-async def aggregate_user_data(user_id: str, days: int = None):
+async def aggregate_user_data(user_id: str, days: Optional[int] = None):
     """Aggregate user data for analysis"""
     if not data_aggregator:
         raise HTTPException(status_code=503, detail="Data aggregator not available")
@@ -298,7 +300,7 @@ async def aggregate_user_data(user_id: str, days: int = None):
         aggregated_data = await data_aggregator.aggregate_user_data(user_id, report_days)
         return {"status": "success", "data": aggregated_data}
     except Exception as e:
-        logger.error("Failed to aggregate user data", user_id=user_id, error=str(e))
+        logger.error(f"Failed to aggregate user data user_id={user_id} error={e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/data/{user_id}/statistics")
@@ -311,7 +313,7 @@ async def get_user_statistics(user_id: str):
         stats = await data_aggregator.get_statistics(user_id)
         return {"user_id": user_id, "statistics": stats}
     except Exception as e:
-        logger.error("Failed to get user statistics", user_id=user_id, error=str(e))
+        logger.error(f"Failed to get user statistics user_id={user_id} error={e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/")
