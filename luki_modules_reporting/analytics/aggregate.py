@@ -6,7 +6,7 @@ mood, and engagement data.
 
 from datetime import date, timedelta
 from typing import List, Dict, Any, Optional
-from collections import defaultdict, Counter
+from collections import Counter
 import statistics
 
 from ..data.schemas import (

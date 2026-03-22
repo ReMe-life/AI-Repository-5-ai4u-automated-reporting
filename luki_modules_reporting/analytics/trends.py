@@ -5,7 +5,7 @@ and forecasting for activity, mood, and engagement data.
 """
 
 from datetime import date, timedelta
-from typing import List, Dict, Any, Optional, Tuple
+from typing import List, Dict, Any, Optional
 import statistics
 from dataclasses import dataclass
 
@@ -13,7 +13,6 @@ import pandas as pd
 import numpy as np
 from scipy import stats
 from statsmodels.tsa.seasonal import seasonal_decompose
-from statsmodels.tsa.holtwinters import ExponentialSmoothing
 
 from ..data.schemas import ActivityLog, MoodEntry, EngagementMetric
 from ..config import settings

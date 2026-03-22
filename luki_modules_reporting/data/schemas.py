@@ -5,9 +5,9 @@ and aggregated wellbeing data used in report generation.
 """
 
 from datetime import datetime, date as date_type
-from typing import Optional, List, Dict, Any, Union
+from typing import Optional, List, Dict, Any
 from enum import Enum
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field
 
 
 class MoodLevel(str, Enum):

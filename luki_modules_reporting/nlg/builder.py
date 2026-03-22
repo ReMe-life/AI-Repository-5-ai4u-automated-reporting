@@ -7,7 +7,7 @@ Supports different audiences (family, clinician) with appropriate tone and detai
 import os
 from datetime import datetime, timedelta
 from typing import Dict, Any, Optional
-from jinja2 import Environment, FileSystemLoader, Template
+from jinja2 import Environment, FileSystemLoader
 
 from ..data.schemas import WellbeingMetrics, ReportData
 from ..config import settings
