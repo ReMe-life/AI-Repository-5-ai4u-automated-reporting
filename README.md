@@ -1,145 +1,74 @@
-# luki-modules-reporting  
-*Automated wellbeing reports, trend analysis & NLG for ReMeLife*
+# luki-modules-reporting
 
----
+> **This repository is archived.** Active development continues in a private repository. This public version reflects the ReMeLife integration era and is no longer maintained.
 
-## License
+Reporting module for LUKi. Generates wellbeing reports, trend analysis, and visualisations from ELR data and activity logs.
 
-This project is licensed under the [Apache 2.0 License with ReMeLife custom clauses]
+## What It Does
 
----
+- Aggregates activity, mood, and engagement metrics over configurable time windows
+- Detects trends and anomalies in wellbeing data (seasonal decomposition, z-score)
+- Generates natural language summaries from structured metrics (Jinja2 templates, optional LLM)
+- Produces chart visualisations (matplotlib)
+- Exposes report generation as callable tools for the LUKi agent
 
-## 1. Overview  
-This module generates **clear, human-readable reports** from ELR® data, activity logs, and engagement metrics. It turns raw signals into **actionable summaries** for families, carers, and clinicians—automatically and on schedule.
+## Stack
 
----
+- **NLG:** Jinja2 templates + rule-based sentence assembly, optional LLM summarisation
+- **Analytics:** pandas, statsmodels (seasonal decomposition), scipy
+- **Visualisation:** matplotlib, plotly
+- **API:** FastAPI
+- **Deployment:** Docker on Railway
 
-## 2. Core Capabilities  
-- **Natural Language Generation (NLG):** Convert structured metrics into caregiver-friendly narratives.  
-- **Wellbeing Trend Analysis:** Detect changes in mood, engagement, cognition across time windows.  
-- **Visual Summaries (optional):** Produce charts/plots (PNG/SVG) for dashboards or PDFs.  
-- **Template System:** Reusable report templates per audience (family vs clinician).  
-- **APIs & Agent Tools:** Expose “generate_report”, “get_trends” for the LUKi agent or external services.
+## Structure
 
----
-
-## 3. Tech Stack  
-- **NLG & Summarisation:**  
-  - Lightweight templates (Jinja2) + rule-based sentence assembly  
-  - Optional LLM-assisted summarisation via internal agent (not in this repo)  
-- **Analytics & Time Series:** pandas, statsmodels/prophet (optional)  
-- **Data Viz:** matplotlib / plotly (static export)  
-- **Schema & Validation:** pydantic  
-- **Orchestration:** LangChain tools to let LUKi trigger reports
-
----
-
-## 4. Repository Structure  
-~~~text
+```
 luki_modules_reporting/
-├── __init__.py
-├── config.py
+├── main.py                  # FastAPI app, all endpoints
+├── config.py                # Service configuration
 ├── data/
-│   ├── schemas.py             # pydantic models: ActivityLog, MoodEntry, etc.
-│   └── loaders.py             # adapters to pull metrics from stores/APIs
+│   ├── schemas.py           # Pydantic models (ActivityLog, MoodEntry, etc.)
+│   └── loaders.py           # Metric fetching from memory service
 ├── analytics/
-│   ├── aggregate.py           # rollups, stats
-│   ├── trends.py              # time-series analysis
-│   └── viz.py                 # chart generators (png/svg)
+│   ├── aggregate.py         # Metric rollups and statistics
+│   ├── trends.py            # Time-series trend detection
+│   ├── wellbeing.py         # Wellbeing score computation
+│   └── viz.py               # Chart generation (PNG/SVG)
 ├── nlg/
 │   ├── templates/
-│   │   ├── family.j2
-│   │   └── clinician.j2
-│   ├── builder.py             # assemble narrative from stats + templates
-│   └── summariser.py          # optional LLM summarisation hook
-├── interfaces/
-│   ├── agent_tools.py         # LangChain @tool wrappers
-│   └── api.py                 # FastAPI endpoints (optional)
-└── tests/
-~~~
+│   │   ├── family.j2        # Family-audience report template
+│   │   └── clinician.j2     # Clinician-audience report template
+│   ├── builder.py           # Report assembly from stats + templates
+│   └── summariser.py        # LLM summarisation hook
+└── interfaces/
+    └── agent_tools.py       # Functions exposed to LUKi agent
+```
 
----
+## Setup
 
-## 5. Quick Start  
-~~~bash
-git clone git@github.com:REMELife/luki-modules-reporting.git
+```bash
+git clone git@github.com:ReMeLife/luki-modules-reporting.git
 cd luki-modules-reporting
 python -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
-~~~
+uvicorn luki_modules_reporting.main:app --reload --port 8103
+```
 
-### Minimal example  
-~~~python
-from datetime import date, timedelta
-from luki_modules_reporting.data.loaders import load_demo_metrics
-from luki_modules_reporting.analytics.aggregate import aggregate_metrics
-from luki_modules_reporting.nlg.builder import build_report
+## Key Endpoints
 
-# 1. Load demo data (replace with real ELR/metrics adapters)
-metrics = load_demo_metrics(user_id="user_123",
-                            start=date.today()-timedelta(days=7),
-                            end=date.today())
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/reports/{user_id}/wellbeing` | Generate wellbeing report |
+| GET | `/reports/{user_id}/trends` | Analyse trends over time window |
+| POST | `/reports/generate` | Generate text narrative |
+| GET | `/health` | Service health |
 
-# 2. Aggregate & analyse
-stats = aggregate_metrics(metrics)
+## Agent Tools
 
-# 3. Build narrative
-report_text = build_report(stats, audience="family")  # or "clinician"
-print(report_text)
-~~~
+- `generate_wellbeing_report` — text report for a given time window
+- `get_activity_trends` — trend analysis with anomaly detection
+- `create_visual_report` — chart generation
 
-### Generate chart & embed in report  
-~~~python
-from luki_modules_reporting.analytics.viz import activity_chart
-fig_path = activity_chart(metrics, out_path="outputs/activity.png")
+## License
 
-# pass fig_path to the template context inside build_report(...)
-~~~
-
-### Expose as LangChain tool  
-~~~python
-# interfaces/agent_tools.py
-from langchain.tools import tool
-from .nlg.builder import build_report
-from .data.loaders import fetch_metrics_window
-from .analytics.aggregate import aggregate_metrics
-
-@tool("generate_wellbeing_report", return_direct=True)
-def generate_wellbeing_report(user_id: str, days: int = 7) -> str:
-    """Return a text wellbeing report for the last N days."""
-    metrics = fetch_metrics_window(user_id=user_id, days=days)
-    stats = aggregate_metrics(metrics)
-    return build_report(stats, audience="family")
-~~~
-
----
-
-## 6. Privacy & Compliance  
-- Do **not** log raw ELR text in this repo; only derived stats.  
-- Encrypt any temporary files (figures, PDFs) at rest.  
-- Respect consent flags—exclude hidden/sensitive categories from outputs.  
-- Keep PHI out of public issues; use synthetic examples.
-
----
-
-## 7. Roadmap  
-- PDF export service (WeasyPrint / ReportLab)  
-- Multi-language report templates (i18n)  
-- Clinician-specific metrics (MMSE scores, med adherence)  
-- Alerting: threshold-based notifications (e.g., sudden drop in engagement)  
-- Differential privacy for aggregated reports across cohorts
-
----
-
-## 8. Contributing  
-Open to PRs. Follow `CONTRIBUTING.md`, keep tests green, and document new templates.
-
----
-
-## 9. License  
-**Apache-2.0** © 2025 Singularities Ltd / ReMeLife.  
-(Add via GitHub “Choose a license template” or paste the standard Apache-2.0 text in `LICENSE`.)
-
----
-
-**Turn data into insight. Help carers act, not guess.**
+Apache License 2.0. Copyright 2025 Singularities Ltd / ReMeLife. See [LICENSE](LICENSE).

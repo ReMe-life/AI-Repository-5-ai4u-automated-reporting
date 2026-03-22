@@ -1,0 +1,33 @@
+# Core framework
+pydantic>=2.5.0
+pydantic-settings>=2.1.0
+python-dotenv>=1.0.0
+fastapi>=0.104.0
+uvicorn>=0.24.0
+httpx>=0.25.0
+
+# Data processing and analytics
+pandas>=2.1.0
+numpy>=1.24.0
+scipy>=1.10.0
+statsmodels>=0.14.0
+
+# Visualization
+matplotlib>=3.7.0
+plotly>=5.17.0
+seaborn>=0.12.0
+
+# Template engine
+jinja2>=3.1.0
+markupsafe>=2.1.0
+
+# LangChain tools
+langchain>=0.1.0
+langchain-core>=0.1.0
+langchain-community>=0.0.10
+
+# Date handling
+python-dateutil>=2.8.0
+
+# Logging
+structlog>=23.2.0
