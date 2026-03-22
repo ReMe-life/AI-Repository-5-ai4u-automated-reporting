@@ -4,9 +4,11 @@ Provides hooks for LLM-assisted summarization and narrative enhancement.
 This module can integrate with the core LUKi agent for advanced NLG.
 """
 
-from typing import Optional, Dict, Any
-import asyncio
+from typing import Optional
+import logging
 import httpx
+
+logger = logging.getLogger(__name__)
 
 from ..data.schemas import WellbeingMetrics, ReportData
 from ..config import settings
@@ -52,11 +54,11 @@ class ReportSummariser:
                 data = response.json()
                 return data.get("reply", base_narrative)
             else:
-                print(f"LLM enhancement failed: {response.status_code}")
+                logger.warning(f"LLM enhancement failed: {response.status_code}")
                 return base_narrative
         
         except Exception as e:
-            print(f"Error in LLM enhancement: {e}")
+            logger.error(f"Error in LLM enhancement: {e}")
             return base_narrative
     
     def _create_enhancement_prompt(
@@ -135,7 +137,7 @@ Summary:"""
                 return "Summary generation unavailable"
         
         except Exception as e:
-            print(f"Error generating summary: {e}")
+            logger.error(f"Error generating summary: {e}")
             return "Summary generation unavailable"
     
     async def generate_insights(
@@ -182,7 +184,7 @@ Insights:"""
                     import json
                     insights = json.loads(reply)
                     return insights[:max_insights] if isinstance(insights, list) else []
-                except:
+                except (json.JSONDecodeError, ValueError):
                     # Fallback: split by lines and clean up
                     lines = reply.strip().split('\n')
                     insights = [line.strip('- ').strip() for line in lines if line.strip()]
@@ -191,7 +193,7 @@ Insights:"""
             return []
         
         except Exception as e:
-            print(f"Error generating insights: {e}")
+            logger.error(f"Error generating insights: {e}")
             return []
 
 
