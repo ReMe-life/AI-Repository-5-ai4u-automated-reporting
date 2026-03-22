@@ -196,53 +196,7 @@ class ChartGenerator:
         if wellbeing_metrics.total_activities == 0:
             return self._create_empty_chart("No data available for weekly summary", out_path or "weekly_summary.png")
         
-        # Create figure with subplots
-        fig = make_subplots(
-            rows=2, cols=2,
-            subplot_titles=('Daily Activities', 'Mood Trends', 'Engagement Score', 'Activity Types'),
-            specs=[[{"secondary_y": False}, {"secondary_y": False}],
-                   [{"secondary_y": False}, {"type": "pie"}]]
-        )
-        
-        # Use aggregated metrics data instead of undefined variables
-        # Total activities bar
-        fig.add_trace(
-            go.Bar(x=["Total Activities"], y=[wellbeing_metrics.total_activities], 
-                   name="Activities", marker_color='lightblue'),
-            row=1, col=1
-        )
-        
-        # Mood score if available
-        if wellbeing_metrics.avg_mood_score is not None:
-            fig.add_trace(
-                go.Bar(x=["Avg Mood"], y=[wellbeing_metrics.avg_mood_score], 
-                       name="Mood", marker_color='green'),
-                row=1, col=2
-            )
-        
-        # Engagement score
-        fig.add_trace(
-            go.Bar(x=["Avg Engagement"], y=[wellbeing_metrics.avg_engagement_score], 
-                   name="Engagement", marker_color='orange'),
-            row=2, col=1
-        )
-        
-        # Activity type breakdown
-        if wellbeing_metrics.activity_breakdown:
-            types = list(wellbeing_metrics.activity_breakdown.keys())
-            counts = list(wellbeing_metrics.activity_breakdown.values())
-            
-            fig.add_trace(
-                go.Pie(labels=types, values=counts, name="Activity Types"),
-                row=2, col=2
-            )
-        
-        fig.update_layout(height=800, showlegend=True, title_text="Weekly Wellbeing Summary")
-        
-        # Save as HTML first, then convert to image
         output_path = out_path or os.path.join(self.output_dir, "weekly_summary.png")
-        
-        # For PNG output, we'll use matplotlib instead
         return self._create_matplotlib_summary(wellbeing_metrics, output_path)
     
     def _create_matplotlib_summary(self, wellbeing_metrics: WellbeingMetrics, output_path: str) -> str:
